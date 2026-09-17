@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment files
+.env
+.env.local
+
+# Logs & cache
+*.log
+npm-debug.log*
+.system_generated/
+__pycache__/
+*.pyc
+
+# Build outputs
+frontend/dist/
+dist/
+
+# Scratch & temporary
+scratch/
+pdf_text_extracted.txt
+extract_pdf.py
+check_env.py
