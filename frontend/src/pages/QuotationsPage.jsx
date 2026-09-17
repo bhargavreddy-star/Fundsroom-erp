@@ -281,7 +281,7 @@ const QuotationsPage = () => {
                         </button>
                       )}
 
-                      {(q.status === 'DRAFT' || q.status === 'SENT') && (
+                      {q.status === 'SENT' && (
                         <>
                           <button
                             onClick={() => handleUpdateStatus(q.id, 'ACCEPTED')}

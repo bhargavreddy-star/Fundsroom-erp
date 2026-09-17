@@ -277,30 +277,47 @@ Open `http://localhost:5173` in your web browser. Use the 1-click test fill butt
 
 ---
 
-## 10. Automated Test Suite Summary
+## 10. State Transition Rules & Lifecycle Matrix
 
-Our automated test suite (`backend/tests/`) covers all requirements mandated by the case study specification:
+### A. Enquiry Lifecycle
+```
+NEW → QUOTED → WON / LOST
+```
+- **NEW:** Initial state when an enquiry is created.
+- **QUOTED:** Automatically transitioned when a Quotation is generated against the enquiry, or via authorized status update.
+- **WON:** Automatically transitioned when the associated Quotation is marked `ACCEPTED`.
+- **LOST:** Terminal state if customer declines or cancels the enquiry.
+- **Terminal Enforcement:** Invariant check prevents reverting `WON` or `LOST` back to `NEW` or `QUOTED`.
 
-| Test ID | Test Suite | Test Description | Result |
-|---|---|---|:---:|
-| **TEST 1** | `calculator.test.js` | Accurately calculates line item with Base, Discount %, and 18% GST | ✅ PASS |
-| **TEST 1b** | `calculator.test.js` | Accurately calculates multi-item quotation grand totals | ✅ PASS |
-| **TEST 1c** | `calculator.test.js` | Rejects negative prices, zero quantities, and invalid tax percentages | ✅ PASS |
-| **TEST 2** | `businessRules.test.js` | Enforces that DRAFT and REJECTED quotations cannot create Sales Orders | ✅ PASS |
-| **TEST 3** | `businessRules.test.js` | Enforces that the same quotation cannot generate duplicate Sales Orders | ✅ PASS |
-| **TEST 4** | `businessRules.test.js` | Cannot reserve more than available inventory (Physical − Reserved) | ✅ PASS |
-| **TEST 4b** | `businessRules.test.js` | Atomic dispatch decreases physical and reserved stock correctly | ✅ PASS |
-| **TEST 5** | `businessRules.test.js` | Rejects unauthenticated requests with HTTP 401 | ✅ PASS |
-| **TEST 5b** | `businessRules.test.js` | Rejects SALES_USER from confirming Sales Orders with HTTP 403 | ✅ PASS |
-| **TEST 5c** | `businessRules.test.js` | Rejects SALES_USER from processing dispatch with HTTP 403 | ✅ PASS |
-| **TEST 5d** | `businessRules.test.js` | Rejects SALES_USER from creating products master with HTTP 403 | ✅ PASS |
-| **BONUS** | `businessRules.test.js` | Race condition test: Two simultaneous requests exceeding available stock cannot both succeed | ✅ PASS |
-
-**Total:** 13 Passed, 0 Failed.
+### B. Quotation Lifecycle
+```
+DRAFT → SENT → ACCEPTED / REJECTED
+```
+- **DRAFT:** Initial state when commercial quotation is generated.
+- **SENT:** Quotation officially delivered to customer. `DRAFT` can **only** transition to `SENT`.
+- **ACCEPTED:** Customer accepts the quotation. Triggers Enquiry status to `WON`. Can now be converted into a Sales Order.
+- **REJECTED:** Customer rejects quotation. Terminal state.
+- **Terminal & Conversion Enforcement:** Terminal states cannot be reverted. Quotations already converted to a Sales Order cannot have their status modified.
 
 ---
 
-## 11. REST API Specification
+## 11. Automated Test Suite Summary
+
+Our automated test suite includes **21 backend tests** across unit, integration, and concurrency scenarios, plus **Playwright E2E browser tests** and a **42-point live integration audit**:
+
+| Test Suite | Test File | Scope / Assertions | Real Result |
+|---|---|---|:---:|
+| **Quotation Engine** | `backend/tests/calculator.test.js` | Base, Discount %, GST 18%, Grand Total, input validation | ✅ 4/4 PASS |
+| **RBAC & Business Rules** | `backend/tests/businessRules.test.js` | Auth guards, 403 checks, DRAFT conversion block, 1:1 order uniqueness, stock limit invariant, concurrency race test | ✅ 9/9 PASS |
+| **PostgreSQL Live Integration** | `backend/tests/postgresIntegration.test.js` | Real PostgreSQL state machines (Enquiry & Quotation), terminal state prevention, duplicate conversion block, all-or-nothing rollback, concurrent row locking | ✅ 8/8 PASS |
+| **Playwright E2E Automation** | `qa_automation/tests/workflow.spec.js` | Browser E2E: Auth, multi-item Enquiry, Quotation (Draft->Sent->Accepted), Order Conversion, Admin Confirmation, Dispatch | ✅ 3/3 PASS |
+| **Live Database & API Audit** | `qa_suite/live_audit.js` | 42-point live system validation against active PostgreSQL 18 & Express API | ✅ 42/42 PASS |
+
+**Total Backend Unit & Integration Tests:** 21 Passed, 0 Failed.
+
+---
+
+## 12. REST API Specification
 
 Interactive Swagger UI documentation is available at `http://localhost:5000/api-docs`.
 

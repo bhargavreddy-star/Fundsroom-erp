@@ -227,20 +227,35 @@ const getEnquiryById = async (req, res, next) => {
 
 /**
  * Update enquiry status (NEW, QUOTED, WON, LOST)
+ * Enforces valid state machine transitions:
+ * NEW -> QUOTED, LOST
+ * QUOTED -> WON, LOST
+ * WON -> Terminal state
+ * LOST -> Terminal state
  */
+const validEnquiryTransitions = {
+  NEW: ['QUOTED', 'LOST'],
+  QUOTED: ['WON', 'LOST'],
+  WON: [],
+  LOST: [],
+};
+
 const updateEnquiryStatus = async (req, res, next) => {
+  const client = await db.getClient();
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const result = await db.query(`
-      UPDATE enquiries
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `, [status, id]);
+    await client.query('BEGIN');
 
-    if (result.rows.length === 0) {
+    // 1. Fetch current enquiry with row-level lock
+    const checkResult = await client.query(
+      'SELECT id, status FROM enquiries WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({
         success: false,
         message: `Enquiry with ID ${id} not found.`,
@@ -248,13 +263,40 @@ const updateEnquiryStatus = async (req, res, next) => {
       });
     }
 
+    const currentStatus = checkResult.rows[0].status;
+    const allowedTransitions = validEnquiryTransitions[currentStatus] || [];
+
+    if (!allowedTransitions.includes(status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `Invalid enquiry status transition from '${currentStatus}' to '${status}'. Allowed transitions: [${allowedTransitions.join(', ') || 'None - Terminal state'}]`,
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        current_status: currentStatus,
+        attempted_status: status,
+        allowed_transitions: allowedTransitions,
+      });
+    }
+
+    const result = await client.query(`
+      UPDATE enquiries
+      SET status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `, [status, id]);
+
+    await client.query('COMMIT');
+
     return res.status(200).json({
       success: true,
       message: `Enquiry status updated to '${status}'`,
       data: result.rows[0],
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 };
 

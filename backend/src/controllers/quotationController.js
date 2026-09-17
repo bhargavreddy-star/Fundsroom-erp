@@ -287,20 +287,35 @@ const getQuotationById = async (req, res, next) => {
 
 /**
  * Update Quotation Status (DRAFT, SENT, ACCEPTED, REJECTED)
+ * Enforces valid state machine transitions:
+ * DRAFT -> SENT, ACCEPTED, REJECTED
+ * SENT -> ACCEPTED, REJECTED
+ * ACCEPTED -> Terminal state (cannot revert)
+ * REJECTED -> Terminal state (cannot revert)
  */
+const validQuotationTransitions = {
+  DRAFT: ['SENT'],
+  SENT: ['ACCEPTED', 'REJECTED'],
+  ACCEPTED: [],
+  REJECTED: [],
+};
+
 const updateQuotationStatus = async (req, res, next) => {
+  const client = await db.getClient();
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const result = await db.query(`
-      UPDATE quotations
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `, [status, id]);
+    await client.query('BEGIN');
 
-    if (result.rows.length === 0) {
+    // 1. Fetch current quotation with lock
+    const checkResult = await client.query(
+      'SELECT id, status, enquiry_id FROM quotations WHERE id = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({
         success: false,
         message: `Quotation with ID ${id} not found.`,
@@ -308,24 +323,69 @@ const updateQuotationStatus = async (req, res, next) => {
       });
     }
 
+    const currentQuotation = checkResult.rows[0];
+    const currentStatus = currentQuotation.status;
+
+    // Check if already converted to a Sales Order
+    const orderCheck = await client.query(
+      'SELECT id, order_number FROM sales_orders WHERE quotation_id = $1',
+      [id]
+    );
+
+    if (orderCheck.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change status of Quotation: It has already been converted to Sales Order ${orderCheck.rows[0].order_number}.`,
+        errorCode: 'QUOTATION_ALREADY_CONVERTED',
+      });
+    }
+
+    // Validate state transition
+    const allowedNextStatuses = validQuotationTransitions[currentStatus] || [];
+    if (!allowedNextStatuses.includes(status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status transition from '${currentStatus}' to '${status}'. Allowed transitions: [${allowedNextStatuses.join(', ') || 'None - Terminal state'}]`,
+        errorCode: 'INVALID_STATUS_TRANSITION',
+        current_status: currentStatus,
+        attempted_status: status,
+        allowed_transitions: allowedNextStatuses,
+      });
+    }
+
+    // 2. Perform the update
+    const result = await client.query(`
+      UPDATE quotations
+      SET status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `, [status, id]);
+
     // If quotation is accepted, mark enquiry as WON
     if (status === 'ACCEPTED') {
-      await db.query(`
+      await client.query(`
         UPDATE enquiries SET status = 'WON', updated_at = CURRENT_TIMESTAMP WHERE id = $1
-      `, [result.rows[0].enquiry_id]);
+      `, [currentQuotation.enquiry_id]);
     } else if (status === 'REJECTED') {
-      await db.query(`
+      await client.query(`
         UPDATE enquiries SET status = 'LOST', updated_at = CURRENT_TIMESTAMP WHERE id = $1
-      `, [result.rows[0].enquiry_id]);
+      `, [currentQuotation.enquiry_id]);
     }
+
+    await client.query('COMMIT');
 
     return res.status(200).json({
       success: true,
-      message: `Quotation status updated to '${status}'.`,
+      message: `Quotation status updated from '${currentStatus}' to '${status}'.`,
       data: result.rows[0],
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 };
 

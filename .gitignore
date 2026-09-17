@@ -1,27 +1,52 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
 # Dependencies
 node_modules/
 package-lock.json
 
-# Environment files
-.env
-.env.local
+# Build outputs
+dist/
+build/
+frontend/dist/
 
-# Logs & cache
+# Test, coverage & Playwright artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+qa_automation/node_modules/
+qa_automation/test-results/
+qa_automation/playwright-report/
+
+# Logs & Cache
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .system_generated/
 __pycache__/
 *.pyc
 
-# Build outputs
-frontend/dist/
-dist/
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
-# Scratch & temporary
+# Scratch & Temporary runners
 scratch/
 pdf_text_extracted.txt
 extract_pdf.py
 check_env.py
+qa_test_db_connect.js
+qa_test_uri.js
+qa_inspect_db.js
+test_playwright_launch.js
+qa_login_screenshot.png
+qa_e2e/
 powershell.cmd
 powershell.bat
 */powershell.cmd
