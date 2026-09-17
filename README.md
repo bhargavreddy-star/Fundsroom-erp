@@ -1,7 +1,7 @@
 # Fundsroom PERN Stack ERP Application
 ### Industrial Manufacturing & Supply Chain Workflow System
 
-**Author:** Bhargav Reddy  
+**Author:** G Bhargav Reddy  
 **Role:** Full-Stack Developer Technical Case Study  
 **Submission Date:** September 17, 2026  
 **Technology Stack:** PostgreSQL, Express.js, React.js, Node.js (PERN)  
