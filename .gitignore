@@ -51,3 +51,7 @@ powershell.cmd
 powershell.bat
 */powershell.cmd
 */powershell.bat
+
+# Generated Documentation Binaries
+Fundsroom_ERP_Technical_Documentation.docx
+Fundsroom_ERP_Technical_Documentation.pdf
