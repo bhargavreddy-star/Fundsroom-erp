@@ -343,8 +343,4 @@ Interactive Swagger UI documentation is available at `http://localhost:5000/api-
 
 ---
 
-## 12. Submission Documents
 
-- **Word Document:** `ERP_Case_Study_Documentation.docx`
-- **PDF Document:** `ERP_Case_Study_Documentation.pdf`
-- **Postman Collection:** `docs/Fundsroom_ERP_Postman_Collection.json`
