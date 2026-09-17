@@ -22,3 +22,7 @@ scratch/
 pdf_text_extracted.txt
 extract_pdf.py
 check_env.py
+powershell.cmd
+powershell.bat
+*/powershell.cmd
+*/powershell.bat
