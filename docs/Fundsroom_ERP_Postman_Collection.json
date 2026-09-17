@@ -1,0 +1,237 @@
+{
+  "info": {
+    "name": "Fundsroom PERN ERP API Collection",
+    "description": "Comprehensive Postman API collection for Fundsroom ERP Technical Case Study\nAuthor: Bhargav Reddy\nStack: PostgreSQL + Express + React + Node.js",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login as Sales User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"sales\",\n  \"password\": \"Sales@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Authenticated Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Customers",
+      "item": [
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] }
+          }
+        },
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"Delta Industrial Solutions Ltd.\",\n  \"contact_person\": \"Vikram Malhotra\",\n  \"mobile\": \"+91-9876543210\",\n  \"email\": \"vikram@deltasolutions.in\",\n  \"city\": \"Bengaluru\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Products & Inventory",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Get Real-Time Inventory Stock Master",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/inventory", "host": ["{{baseUrl}}"], "path": ["inventory"] }
+          }
+        },
+        {
+          "name": "Update Physical Stock (Admin Only)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"physical_quantity\": 250\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/1/stock", "host": ["{{baseUrl}}"], "path": ["inventory", "1", "stock"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Enquiries",
+      "item": [
+        {
+          "name": "Get All Enquiries",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/enquiries", "host": ["{{baseUrl}}"], "path": ["enquiries"] }
+          }
+        },
+        {
+          "name": "Create Customer Enquiry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": 1,\n  \"required_date\": \"2026-10-15\",\n  \"notes\": \"Urgent machinery spare requirement\",\n  \"items\": [\n    { \"product_id\": 1, \"quantity\": 15 },\n    { \"product_id\": 2, \"quantity\": 2 }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/enquiries", "host": ["{{baseUrl}}"], "path": ["enquiries"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Quotations",
+      "item": [
+        {
+          "name": "Get All Quotations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/quotations", "host": ["{{baseUrl}}"], "path": ["quotations"] }
+          }
+        },
+        {
+          "name": "Create Commercial Quotation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enquiry_id\": 1,\n  \"valid_until\": \"2026-10-30\",\n  \"notes\": \"5% volume discount applied\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 15,\n      \"unit_price\": 450,\n      \"discount_percent\": 5,\n      \"gst_percent\": 18\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/quotations", "host": ["{{baseUrl}}"], "path": ["quotations"] }
+          }
+        },
+        {
+          "name": "Update Quotation Status (Accept/Reject)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/quotations/1/status", "host": ["{{baseUrl}}"], "path": ["quotations", "1", "status"] }
+          }
+        },
+        {
+          "name": "Convert Accepted Quotation to Sales Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/quotations/1/convert", "host": ["{{baseUrl}}"], "path": ["quotations", "1", "convert"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Sales Orders & Dispatch",
+      "item": [
+        {
+          "name": "Get All Sales Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/sales-orders", "host": ["{{baseUrl}}"], "path": ["sales-orders"] }
+          }
+        },
+        {
+          "name": "Confirm Sales Order & Reserve Inventory (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/sales-orders/1/confirm", "host": ["{{baseUrl}}"], "path": ["sales-orders", "1", "confirm"] }
+          }
+        },
+        {
+          "name": "Process Dispatch (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_number\": \"MH-12-AB-9876\",\n  \"driver_name\": \"Ramesh Kumar\",\n  \"notes\": \"Dispatched via Freight Express\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/sales-orders/1/dispatch", "host": ["{{baseUrl}}"], "path": ["sales-orders", "1", "dispatch"] }
+          }
+        }
+      ]
+    }
+  ]
+}
